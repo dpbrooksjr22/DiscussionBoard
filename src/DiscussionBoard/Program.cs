@@ -44,7 +44,23 @@ namespace DiscussionBoard
 
             builder.Services.AddScoped<ForumService>();
 
+            builder.Services.AddScoped<DiscussionThreadService>();
+
+            builder.Services.AddScoped<PostService>();
+
             var app = builder.Build();
+
+            if (app.Environment.IsDevelopment())
+            {
+                using var scope = app.Services.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+                if (!db.Forums.Any())
+                {
+                    DevelopmentSeedService.SeedAsync(app.Services)
+                        .GetAwaiter().GetResult();
+                }
+            }
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

@@ -1,0 +1,19 @@
+﻿@model DiscussionBoard.Models.DiscussionThread
+
+<article class="card mb-5">
+    <div class="card-body">
+        <h3 class="card-title h5">
+            <a asp-page="/Discussions/Details"
+               asp-route-threadId="@Model.Id">
+                @Model.Title
+            </a>
+        </h3>
+
+        <p class="card-text">@Model.Content</p>
+
+        <h3 class="text-muted">
+            Created by @Model.ApplicationUser?.UserName
+            on @Model.CreatedAt.ToLocalTime().ToString("g")
+        </h3>
+    </div>
+</article>

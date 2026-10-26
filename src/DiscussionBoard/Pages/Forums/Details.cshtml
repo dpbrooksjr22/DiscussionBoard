@@ -1,0 +1,42 @@
+﻿@page "/Forum/{id}"
+@model DiscussionBoard.Pages.Forums.DetailsModel
+
+    @{
+        ViewData["Title"] = Model.CurrentForum?.Name;
+    }
+
+<h2>@Model.CurrentForum?.Name</h2>
+
+    <p class="text-muted">
+        @Model.CurrentForum?.Description
+    </p>
+
+    <hr />
+
+<h2>Discussion Threads</h2>
+
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <a asp-page="/Discussions/Create"
+           asp-route-forumId="@Model.CurrentForum?.Id"
+           class="btn btn-primary mb-3">
+            Create Discussion
+        </a>
+    }
+
+    @if (Model.Threads.Count == 0)
+    {
+        <p>No discussion threads exist.</p>
+    }
+    else
+    {
+        @foreach (var thread in Model.Threads)
+        {
+            <partial name="_ThreadCard" model="thread" />
+        }
+    }
+
+    <a asp-page="/Forums/Index"
+       class="btn btn-secondary mt-3">
+        Forums
+    </a>

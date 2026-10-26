@@ -1,0 +1,77 @@
+﻿@page "/Discussion/{threadId}"
+@using System.Security.Claims
+@model DiscussionBoard.Pages.Discussions.DetailsModel
+
+@{
+    ViewData["Title"] = Model.Thread?.Title;
+}
+
+<h1>@Model.Thread?.Title</h1>
+
+<p>@Model.Thread?.Content</p>
+
+<small class="text-muted">
+    Created by @Model.Thread?.ApplicationUser?.UserName
+</small>
+
+@if (Model.Thread != null &&
+     Model.Thread.ApplicationUserId ==
+     User.FindFirstValue(ClaimTypes.NameIdentifier))
+{
+    <a asp-page="/Discussions/Edit"
+       asp-route-id="@Model.Thread.Id"
+       class="btn btn-outline-secondary btn-sm mt-2">
+        Edit Discussion
+    </a>
+}
+
+<hr />
+
+<h2>Replies</h2>
+
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <h4>Post a Reply</h4>
+
+    <form method="post"
+          asp-page-handler="Reply"
+          asp-route-threadId="@Model.Thread?.Id">
+
+        <div asp-validation-summary="All"
+             class="text-danger"></div>
+
+        <div class="mb-3">
+            <textarea asp-for="Input.Content"
+                      class="form-control"
+                      rows="4"
+                      maxlength="10000"></textarea>
+            <span asp-validation-for="Input.Content"
+                  class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            Post Reply
+        </button>
+    </form>
+}
+
+@if (Model.PostTree.Count == 0)
+{
+    <p>No replies yet.</p>
+}
+else
+{
+    @foreach (var root in Model.PostTree)
+    {
+        <partial name="/Pages/Discussions/_PostTree.cshtml"
+                 model="root" />
+    }
+}
+
+<hr />
+
+<a asp-page="/Forums/Details"
+   asp-route-id="@Model.Thread?.ForumId"
+   class="btn btn-secondary">
+    Back to Forum
+</a>
