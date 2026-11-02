@@ -1,4 +1,14 @@
 ﻿@model DiscussionBoard.Models.DiscussionThread
+@using DiscussionBoard.Services
+
+@{
+    var authorName = string.IsNullOrWhiteSpace(Model.ApplicationUser?.DisplayName)
+        ? "Unconfigured User"
+        : Model.ApplicationUser.DisplayName;
+
+    var avatarPath = AvatarCatalog.ImagePath(
+        Model.ApplicationUser?.AvatarId);
+}
 
 <article class="card mb-5">
     <div class="card-body">
@@ -11,9 +21,16 @@
 
         <p class="card-text">@Model.Content</p>
 
-        <h3 class="text-muted">
-            Created by @Model.ApplicationUser?.UserName
-            on @Model.CreatedAt.ToLocalTime().ToString("g")
-        </h3>
+        <div class="d-flex align-items-center gap-2 text-muted">
+            <img src="@avatarPath"
+                 alt="Avatar for @authorName"
+                 class="rounded-circle"
+                 style="width: 32px; height: 32px; object-fit: cover;" />
+
+            <small>
+                Created by @authorName
+                on @Model.CreatedAt.ToLocalTime().ToString("g")
+            </small>
+        </div>
     </div>
 </article>

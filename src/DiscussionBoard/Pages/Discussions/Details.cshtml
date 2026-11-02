@@ -1,18 +1,40 @@
 ﻿@page "/Discussion/{threadId}"
 @using System.Security.Claims
+@using DiscussionBoard.Services
 @model DiscussionBoard.Pages.Discussions.DetailsModel
+
 
 @{
     ViewData["Title"] = Model.Thread?.Title;
+
+    var authorName = Model.Thread?.ApplicationUser?.DisplayName;
+
+    if (string.IsNullOrWhiteSpace(authorName))
+    {
+        authorName = "Unconfigured User";
+    }
+
+    var avatarPath = AvatarCatalog.ImagePath(
+        Model.Thread?.ApplicationUser?.AvatarId);
 }
+
 
 <h1>@Model.Thread?.Title</h1>
 
 <p>@Model.Thread?.Content</p>
 
-<small class="text-muted">
-    Created by @Model.Thread?.ApplicationUser?.UserName
-</small>
+
+<div class="d-flex align-items-center gap-2 text-muted">
+    <img src="@avatarPath"
+         alt="Avatar for @authorName"
+         class="rounded-circle"
+         style="width: 32px; height: 32px; object-fit: cover;" />
+
+    <small>
+        Created by @authorName
+    </small>
+</div>
+
 
 @if (Model.Thread != null &&
      Model.Thread.ApplicationUserId ==

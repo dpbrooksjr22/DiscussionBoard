@@ -25,8 +25,14 @@ namespace DiscussionBoard.Data.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("AvatarId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Email")

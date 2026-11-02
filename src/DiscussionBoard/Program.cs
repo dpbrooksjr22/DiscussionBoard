@@ -38,7 +38,13 @@ namespace DiscussionBoard
                     options.SignIn.RequireConfirmedAccount = !builder.Environment.IsDevelopment())
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-            builder.Services.AddRazorPages();
+            builder.Services.AddRazorPages(options =>
+            {
+                options.Conventions.AuthorizeFolder("/Forums");
+                options.Conventions.AuthorizeFolder("/Discussions");
+                options.Conventions.AuthorizePage("/MyProfile");
+            });
+
 
             builder.Services.AddSingleton<ILogReader, JsonLogReader>();
 
@@ -48,19 +54,23 @@ namespace DiscussionBoard
 
             builder.Services.AddScoped<PostService>();
 
+            builder.Services.AddScoped<IUserProfileService, UserProfileService>();
+
             var app = builder.Build();
+
 
             if (app.Environment.IsDevelopment())
             {
                 using var scope = app.Services.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-                if (!db.Forums.Any())
+                if (!db.Database.GetPendingMigrations().Any() && !db.Forums.Any())
                 {
                     DevelopmentSeedService.SeedAsync(app.Services)
                         .GetAwaiter().GetResult();
                 }
             }
+
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

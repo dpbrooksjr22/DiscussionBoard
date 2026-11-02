@@ -8,6 +8,9 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using DiscussionBoard.Tests.Authentication;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.TestHost;
 
 namespace DiscussionBoard.Tests.DatabaseAndUI
 {
@@ -31,6 +34,7 @@ namespace DiscussionBoard.Tests.DatabaseAndUI
             int replyA1Id;
             int replyA11Id;
             int parentBId;
+            string testUserId;
 
             // Seed an in-memory database with the hierarchy
             using (IServiceScope scope = factory.Services.CreateScope())
@@ -39,6 +43,8 @@ namespace DiscussionBoard.Tests.DatabaseAndUI
                 await db.Database.EnsureCreatedAsync(TestContext.Current.CancellationToken);
 
                 var user = new ApplicationUser { Id = Guid.NewGuid().ToString(), UserName = "nested-test" };
+                testUserId = user.Id;
+
                 var forum = new Forum { Name = "Hierarchy test forum" };
                 db.Users.Add(user);
                 db.Forums.Add(forum);
@@ -87,6 +93,11 @@ namespace DiscussionBoard.Tests.DatabaseAndUI
                 replyA11Id = replyA11.Id;
             }
 
+            client.DefaultRequestHeaders.Add(
+                TestUserAuthenticationHandler.UserHeader,
+                testUserId);
+
+
             using var response = await client.GetAsync($"/Discussion/{threadId}", TestContext.Current.CancellationToken);
             Assert.True(response.IsSuccessStatusCode,
                 $"Discussion page returned HTTP {(int)response.StatusCode}.");
@@ -113,17 +124,36 @@ namespace DiscussionBoard.Tests.DatabaseAndUI
         private static IElement? ClosestAncestorPost(IElement element) =>
             element.ParentElement?.Closest("article[data-post-id]");
 
-        private sealed class TestWebFactory(SqliteConnection connection) : WebApplicationFactory<DiscussionBoard.Program>
+
+        private sealed class TestWebFactory(SqliteConnection connection)
+            : WebApplicationFactory<DiscussionBoard.Program>
         {
             protected override void ConfigureWebHost(IWebHostBuilder builder)
             {
                 builder.UseEnvironment("Testing");
-                builder.ConfigureServices(services =>
+
+                builder.ConfigureTestServices(services =>
                 {
                     services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
-                    services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(connection));
+
+                    services.AddDbContext<ApplicationDbContext>(
+                        options => options.UseSqlite(connection));
+
+                    services.AddAuthentication(options =>
+                        {
+                            options.DefaultAuthenticateScheme =
+                                TestUserAuthenticationHandler.Scheme;
+
+                            options.DefaultChallengeScheme =
+                                TestUserAuthenticationHandler.Scheme;
+                        })
+                        .AddScheme<AuthenticationSchemeOptions,
+                            TestUserAuthenticationHandler>(
+                            TestUserAuthenticationHandler.Scheme,
+                            options => { });
                 });
             }
         }
+
     }
 }
