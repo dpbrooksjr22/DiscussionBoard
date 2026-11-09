@@ -1,6 +1,8 @@
 ﻿@page "/Discussion/{threadId}"
 @using System.Security.Claims
 @using DiscussionBoard.Services
+@using DiscussionBoard.Authorization
+@inject IApplicationAuthorizationService AuthorizationService
 @model DiscussionBoard.Pages.Discussions.DetailsModel
 
 
@@ -37,8 +39,7 @@
 
 
 @if (Model.Thread != null &&
-     Model.Thread.ApplicationUserId ==
-     User.FindFirstValue(ClaimTypes.NameIdentifier))
+     await AuthorizationService.CanEditAsync(User, Model.Thread))
 {
     <a asp-page="/Discussions/Edit"
        asp-route-id="@Model.Thread.Id"

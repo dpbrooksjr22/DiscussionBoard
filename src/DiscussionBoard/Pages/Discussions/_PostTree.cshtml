@@ -1,5 +1,7 @@
 ﻿
 @model DiscussionBoard.Services.PostTreeBuilder.Node
+@using DiscussionBoard.Authorization
+@inject IApplicationAuthorizationService AuthorizationService
 @using DiscussionBoard.Services
 
 @{
@@ -28,6 +30,17 @@
             @Model.Post.CreatedAt.ToLocalTime().ToString("g")
         </small>
     </div>
+
+    @if (await AuthorizationService.CanEditAsync(User, Model.Post))
+    {
+        <a asp-page="/Discussions/EditPost"
+           asp-route-threadId="@Model.Post.DiscussionThreadId"
+           asp-route-postId="@Model.Post.Id"
+           class="btn btn-outline-secondary btn-sm mt-2">
+            Edit Post
+        </a>
+    }
+
 
     @if (User.Identity?.IsAuthenticated == true)
     {

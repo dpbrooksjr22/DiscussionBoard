@@ -1,5 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Security.Claims;
+﻿using DiscussionBoard.Authorization;
+using DiscussionBoard.Models;
 using DiscussionBoard.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,31 +9,22 @@ using Microsoft.EntityFrameworkCore;
 namespace DiscussionBoard.Pages.Discussions;
 
 [Authorize]
-public class EditModel : PageModel
+public class ThreadEditModel : PageModel
 {
     private readonly DiscussionThreadService _threadService;
+    private readonly IApplicationAuthorizationService _authorizationService;
 
-    public EditModel(DiscussionThreadService threadService)
+    public ThreadEditModel(DiscussionThreadService threadService, IApplicationAuthorizationService authorizationService)
     {
         _threadService = threadService;
+        _authorizationService = authorizationService;
     }
 
     [BindProperty]
-    public InputModel Input { get; set; } = new();
+    public DiscussionEditViewModel Input { get; set; } = new();
 
     public int ThreadId { get; set; }
     public int ForumId { get; set; }
-
-    public class InputModel
-    {
-        [Required]
-        [MaxLength(200)]
-        public string Title { get; set; } = string.Empty;
-
-        [Required]
-        [MaxLength(10000)]
-        public string Content { get; set; } = string.Empty;
-    }
 
     public async Task<IActionResult> OnGetAsync(int id)
     {
@@ -42,15 +33,17 @@ public class EditModel : PageModel
         if (thread == null)
             return NotFound();
 
-        if (thread.ApplicationUserId !=
-            User.FindFirstValue(ClaimTypes.NameIdentifier))
+        if (!await _authorizationService.CanEditAsync(User, thread))
             return Forbid();
 
         ThreadId = thread.Id;
         ForumId = thread.ForumId;
 
-        Input.Title = thread.Title;
-        Input.Content = thread.Content;
+        Input = new DiscussionEditViewModel
+        {
+            Title = thread.Title,
+            Content = thread.Content
+        };
 
         return Page();
     }
@@ -62,8 +55,7 @@ public class EditModel : PageModel
         if (thread == null)
             return NotFound();
 
-        if (thread.ApplicationUserId !=
-            User.FindFirstValue(ClaimTypes.NameIdentifier))
+        if (!await _authorizationService.CanEditAsync(User, thread))
             return Forbid();
 
         ThreadId = thread.Id;

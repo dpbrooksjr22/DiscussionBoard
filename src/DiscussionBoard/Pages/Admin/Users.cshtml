@@ -1,0 +1,101 @@
+﻿@page
+@using DiscussionBoard.Authorization
+@model DiscussionBoard.Pages.Admin.UsersModel
+
+@{
+    ViewData["Title"] = "Manage Users";
+}
+
+<h1>Manage Users</h1>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">
+        @Model.ErrorMessage
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+{
+    <div class="alert alert-success">
+        @Model.SuccessMessage
+    </div>
+}
+
+<form method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="mb-3">
+        <label for="selectedUserId" class="form-label">
+            Select a User
+        </label>
+
+        <select id="selectedUserId"
+                name="SelectedUserId"
+                class="form-select">
+
+            <option value="" selected="@(string.IsNullOrEmpty(Model.SelectedUserId))">
+                -- Select User --
+            </option>
+
+            @foreach (var user in Model.AvailableUsers)
+            {
+                <option value="@user.Id"
+                        selected="@(user.Id == Model.SelectedUserId)">
+                    @user.DisplayName (@user.Email)
+                </option>
+            }
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        Select User
+    </button>
+</form>
+
+@if (Model.SelectedUser != null)
+{
+    <hr />
+
+    <h2>Selected User</h2>
+
+    <p>
+        <strong>Display Name:</strong>
+        @Model.SelectedUser.DisplayName
+    </p>
+
+    <p>
+        <strong>Email:</strong>
+        @Model.SelectedUser.Email
+    </p>
+
+    <p>
+        <strong>Admin Status:</strong>
+        @(Model.IsSelectedUserAdmin ? "Administrator" : "Regular User")
+    </p>
+
+    <form method="post" asp-page-handler="UpdateRole">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden"
+               name="SelectedUserId"
+               value="@Model.SelectedUser.Id" />
+
+        <input type="hidden"
+               name="RoleName"
+               value="@ApplicationRoles.Admin" />
+
+        @if (Model.IsSelectedUserAdmin)
+        {
+            <button type="submit" class="btn btn-danger">
+                Remove Admin
+            </button>
+        }
+        else
+        {
+            <button type="submit" class="btn btn-success">
+                Add Admin
+            </button>
+        }
+    </form>
+}

@@ -28,4 +28,25 @@ public class PostService
 
         return post;
     }
+
+    public async Task<Post?> GetAsync(int id)
+    {
+        return await _context.Posts
+            .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
+    }
+
+    public async Task<bool> UpdateAsync(Post post)
+    {
+        var existingPost = await _context.Posts
+            .FirstOrDefaultAsync(p => p.Id == post.Id && !p.IsDeleted);
+
+        if (existingPost == null)
+            return false;
+
+        existingPost.Title = post.Title;
+        existingPost.Content = post.Content;
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
 }
